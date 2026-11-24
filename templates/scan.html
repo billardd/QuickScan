@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}LabScan · {{ scan.label }}{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="scan-head">
+    <div>
+      <h1>{{ scan.label }}</h1>
+      <p class="muted mono">{{ scan.target }} ·
+        host {{ scan.host_state }} ·
+        {{ scan.open_count }} open port(s)</p>
+    </div>
+    <form method="post"
+          action="{{ url_for('delete_scan', scan_id=scan.id) }}"
+          onsubmit="return confirm('Delete this saved scan?');">
+      <button class="btn-danger" type="submit">Delete</button>
+    </form>
+  </div>
+
+  <div class="meta-grid">
+    <div><span class="k">Started</span><span class="v mono">{{ scan.started_at }}</span></div>
+    <div><span class="k">Finished</span><span class="v mono">{{ scan.finished_at }}</span></div>
+    <div class="wide"><span class="k">Command</span><span class="v mono">{{ scan.command }}</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Summary
+    {% if scan.summary_src == 'llm' %}
+      <span class="badge ai">AI</span>
+    {% else %}
+      <span class="badge">built-in</span>
+    {% endif %}
+  </h2>
+  <p class="summary">{{ scan.summary }}</p>
+</section>
+
+<section class="card">
+  <h2>Open ports &amp; services</h2>
+  {% if scan.ports %}
+  <table class="scans">
+    <thead>
+      <tr><th>Port</th><th>Proto</th><th>State</th><th>Service</th><th>Product / version</th></tr>
+    </thead>
+    <tbody>
+      {% for p in scan.ports %}
+      <tr>
+        <td class="mono">{{ p.port }}</td>
+        <td class="mono">{{ p.protocol }}</td>
+        <td><span class="pill open">{{ p.state }}</span></td>
+        <td>{{ p.service or '—' }}</td>
+        <td class="muted">{{ (p.product ~ ' ' ~ p.version) | trim or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No open ports were found in the scanned range.</p>
+  {% endif %}
+</section>
+
+<a class="btn-sm" href="{{ url_for('index') }}">← Back to console</a>
+{% endblock %}

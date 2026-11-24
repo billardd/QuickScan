@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LabScan{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◎</span>
+      <span class="brandname">LabScan</span>
+      <span class="tag">lab reconnaissance console</span>
+    </div>
+    <a class="homelink" href="{{ url_for('index') }}">All scans</a>
+  </header>
+
+  <div class="safety-banner">
+    <strong>Authorized lab targets only.</strong>
+    This tool refuses any host outside your approved allowlist / private lab
+    ranges. Do not scan networks you don't own or have written permission to test.
+  </div>
+
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="foot">
+    LabScan · light TCP scan via nmap · for coursework &amp; practice labs
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}LabScan · Console{% endblock %}
+
+{% block content %}
+<section class="card scan-form">
+  <h1>Run a scan</h1>
+  <p class="muted">
+    Light TCP connect scan of the top 100 ports with service detection.
+  </p>
+
+  <form id="scanForm">
+    <label for="label">Label</label>
+    <input type="text" id="label" name="label"
+           placeholder="e.g. Metasploitable baseline" autocomplete="off">
+
+    <label for="target">Target</label>
+    <input type="text" id="target" name="target"
+           value="{{ default_target }}" autocomplete="off">
+    <p class="hint">
+      Allowed: {{ allowed_targets | join(', ') }}{% if allow_private %}
+      — plus any private/lab IP (10.x, 172.16–31.x, 192.168.x, 127.x){% endif %}.
+    </p>
+
+    <button type="submit" id="runBtn">Start scan</button>
+    <span id="status" class="status"></span>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Saved scans</h2>
+  {% if scans %}
+  <table class="scans">
+    <thead>
+      <tr>
+        <th>#</th><th>Label</th><th>Target</th>
+        <th>Open</th><th>When</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in scans %}
+      <tr>
+        <td class="mono">{{ s.id }}</td>
+        <td>{{ s.label }}</td>
+        <td class="mono">{{ s.target }}</td>
+        <td><span class="pill">{{ s.open_count }}</span></td>
+        <td class="muted">{{ s.finished_at }}</td>
+        <td><a class="btn-sm" href="{{ url_for('view_scan', scan_id=s.id) }}">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No scans yet. Run one above.</p>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const form = document.getElementById('scanForm');
+const btn = document.getElementById('runBtn');
+const status = document.getElementById('status');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  btn.disabled = true;
+  status.textContent = 'Scanning… this can take up to a minute.';
+  status.className = 'status working';
+
+  try {
+    const res = await fetch('{{ url_for("scan") }}', {
+      method: 'POST',
+      body: new FormData(form),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      status.textContent = 'Done. Opening results…';
+      window.location = '/scan/' + data.scan_id;
+    } else {
+      status.textContent = 'Blocked: ' + data.error;
+      status.className = 'status error';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    status.textContent = 'Request failed: ' + err;
+    status.className = 'status error';
+    btn.disabled = false;
+  }
+});
+</script>
+{% endblock %}
